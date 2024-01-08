@@ -25,33 +25,33 @@
 #if defined(_WIN64) || defined(WIN64) || defined(__amd64__) || \
 	defined(__x86_64) || defined(__x86_64__) || defined(_M_IA64) || \
 	defined(_M_AMD64)
-typedef unsigned int ISTDUINT32;
-typedef int ISTDINT32;
+	typedef unsigned int ISTDUINT32;
+	typedef int ISTDINT32;
 #elif defined(_WIN32) || defined(WIN32) || defined(__i386__) || \
 	defined(__i386) || defined(_M_X86)
-typedef unsigned long ISTDUINT32;
-typedef long ISTDINT32;
+	typedef unsigned long ISTDUINT32;
+	typedef long ISTDINT32;
 #elif defined(__MACOS__)
-typedef UInt32 ISTDUINT32;
-typedef SInt32 ISTDINT32;
+	typedef UInt32 ISTDUINT32;
+	typedef SInt32 ISTDINT32;
 #elif defined(__APPLE__) && defined(__MACH__)
-#include <sys/types.h>
-typedef u_int32_t ISTDUINT32;
-typedef int32_t ISTDINT32;
+	#include <sys/types.h>
+	typedef u_int32_t ISTDUINT32;
+	typedef int32_t ISTDINT32;
 #elif defined(__BEOS__)
-#include <sys/inttypes.h>
-typedef u_int32_t ISTDUINT32;
-typedef int32_t ISTDINT32;
+	#include <sys/inttypes.h>
+	typedef u_int32_t ISTDUINT32;
+	typedef int32_t ISTDINT32;
 #elif (defined(_MSC_VER) || defined(__BORLANDC__)) && (!defined(__MSDOS__))
-typedef unsigned __int32 ISTDUINT32;
-typedef __int32 ISTDINT32;
+	typedef unsigned __int32 ISTDUINT32;
+	typedef __int32 ISTDINT32;
 #elif defined(__GNUC__)
-#include <stdint.h>
-typedef uint32_t ISTDUINT32;
-typedef int32_t ISTDINT32;
+	#include <stdint.h>
+	typedef uint32_t ISTDUINT32;
+	typedef int32_t ISTDINT32;
 #else 
-typedef unsigned long ISTDUINT32;
-typedef long ISTDINT32;
+	typedef unsigned long ISTDUINT32; 
+	typedef long ISTDINT32;
 #endif
 #endif
 
@@ -200,7 +200,7 @@ typedef struct IQUEUEHEAD iqueue_head;
 
 #define iqueue_foreach_entry(pos, head) \
 	for( (pos) = (head)->next; (pos) != (head) ; (pos) = (pos)->next )
-
+	
 
 #define __iqueue_splice(list, head) do {	\
 		iqueue_head *first = (list)->next, *last = (list)->prev; \
@@ -225,29 +225,40 @@ typedef struct IQUEUEHEAD iqueue_head;
 
 
 //---------------------------------------------------------------------
-// WORD ORDER
+// BYTE ORDER & ALIGNMENT
 //---------------------------------------------------------------------
 #ifndef IWORDS_BIG_ENDIAN
-#ifdef _BIG_ENDIAN_
-#if _BIG_ENDIAN_
-#define IWORDS_BIG_ENDIAN 1
-#endif
-#endif
-#ifndef IWORDS_BIG_ENDIAN
-#if defined(__hppa__) || \
+    #ifdef _BIG_ENDIAN_
+        #if _BIG_ENDIAN_
+            #define IWORDS_BIG_ENDIAN 1
+        #endif
+    #endif
+    #ifndef IWORDS_BIG_ENDIAN
+        #if defined(__hppa__) || \
             defined(__m68k__) || defined(mc68000) || defined(_M_M68K) || \
             (defined(__MIPS__) && defined(__MIPSEB__)) || \
             defined(__ppc__) || defined(__POWERPC__) || defined(_M_PPC) || \
             defined(__sparc__) || defined(__powerpc__) || \
             defined(__mc68000__) || defined(__s390x__) || defined(__s390__)
-#define IWORDS_BIG_ENDIAN 1
-#endif
-#endif
-#ifndef IWORDS_BIG_ENDIAN
-#define IWORDS_BIG_ENDIAN  0
-#endif
+            #define IWORDS_BIG_ENDIAN 1
+        #endif
+    #endif
+    #ifndef IWORDS_BIG_ENDIAN
+        #define IWORDS_BIG_ENDIAN  0
+    #endif
 #endif
 
+#ifndef IWORDS_MUST_ALIGN
+	#if defined(__i386__) || defined(__i386) || defined(_i386_)
+		#define IWORDS_MUST_ALIGN 0
+	#elif defined(_M_IX86) || defined(_X86_) || defined(__x86_64__)
+		#define IWORDS_MUST_ALIGN 0
+	#elif defined(__amd64) || defined(__amd64__)
+		#define IWORDS_MUST_ALIGN 0
+	#else
+		#define IWORDS_MUST_ALIGN 1
+	#endif
+#endif
 
 
 //=====================================================================
@@ -298,10 +309,11 @@ struct IKCPCB
 	void *user;
 	char *buffer;
 	int fastresend;
+	int fastlimit;
 	int nocwnd, stream;
 	int logmask;
-	int(*output)(const char *buf, int len, struct IKCPCB *kcp, void *user);
-	void(*writelog)(const char *log, struct IKCPCB *kcp, void *user);
+	int (*output)(const char *buf, int len, struct IKCPCB *kcp, void *user);
+	void (*writelog)(const char *log, struct IKCPCB *kcp, void *user);
 };
 
 
